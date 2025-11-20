@@ -1,15 +1,13 @@
 defmodule XmasGiftPollWeb.PersonLive.New do
   use XmasGiftPollWeb, :live_view
   alias XmasGiftPoll.Events
+  alias XmasGiftPoll.Repo
 
   def mount(%{"public_id" => public_id}, _, socket) do
     party = Events.Party.get_party_by_public_id!(public_id)
     changeset = Events.change_person(%Events.Person{})
 
-    IO.inspect(party)
     people = Events.Person.get_people_for_party(party.id)
-
-    IO.inspect(people)
 
     {:ok,
      socket
@@ -33,24 +31,57 @@ defmodule XmasGiftPollWeb.PersonLive.New do
     end
   end
 
+  def handle_event("shuffle", _params, socket) do
+    people = socket.assigns.people
+    people_ids = Enum.map(people, fn person -> person.id end)
+    shuffled = Events.GiftShuffle.shuffle_gift_assignments(people_ids)
+    IO.inspect(shuffled)
+
+    Enum.each(shuffled, fn {giver_id, receiver_id} ->
+      person = Enum.filter(people, fn person -> person.id == giver_id end) |> Enum.at(0)
+
+      res =
+        Events.change_person(person, %{receiver_id: receiver_id})
+        |> Repo.update()
+
+      IO.inspect(res)
+    end)
+
+    {:noreply, socket}
+  end
+
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-lg">
-      <h1>Add people to {@party.name}</h1>
+    <div class="mx-auto max-w-lg border border-gray-500 rounded-xl shadow-lg p-4 p-4 mt-10">
+      <h1 class="">Add people to {@party.name}</h1>
 
-      <div>
+      <div class="border-b border-gray-500 w-4/5 mx-auto my-6"></div>
+
+      <div class="border border-gray-500 rounded-xl p-4">
         <h2>People in the party</h2>
-        <ul class="list-disc">
+        <ul class="list-disc list-inside">
           <%= for person <- @people do %>
-            <li>{person.name}</li>
+            <li>
+              {person.name} - {person.receiver_id} -
+              <a
+                class="text-blue-500 hover:text-blue-700"
+                href={~p"/parties/#{@party.public_id}/people/#{person.public_id}/gifts"}
+              >
+                link for gift assigning
+              </a>
+            </li>
           <% end %>
         </ul>
       </div>
 
       <.form for={@form} phx-submit="save">
         <.input field={@form[:name]} type="text" label="Person name" />
-        <.button>Add Person</.button>
+        <.button class="btn btn-primary btn-soft w-full mt-4" type="submit">Add person</.button>
       </.form>
+
+      <.button class="btn btn-primary btn-soft w-full mt-4" type="button" phx-click="shuffle">
+        Shuffle people
+      </.button>
     </div>
     """
   end

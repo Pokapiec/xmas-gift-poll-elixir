@@ -21,6 +21,7 @@ defmodule XmasGiftPollWeb.Router do
 
     live "/parties/new", PartyLive.New
     live "/parties/:public_id/people/new", PersonLive.New
+    live "/parties/:public_id/people/:person_public_id/gifts", PersonGiftLive.New
   end
 
   # Other scopes may use custom stacks.

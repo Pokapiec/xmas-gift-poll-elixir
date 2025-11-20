@@ -212,6 +212,10 @@ defmodule XmasGiftPoll.Events do
     Person.changeset(person, attrs)
   end
 
+  def preload_gifts(%Person{} = person) do
+    Repo.preload(person, :gifts)
+  end
+
   alias XmasGiftPoll.Events.Gift
 
   @doc """

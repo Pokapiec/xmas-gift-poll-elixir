@@ -21,12 +21,12 @@ defmodule XmasGiftPollWeb.PartyLive.New do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-lg">
-      <h1>Create Party</h1>
+    <div class="mx-auto max-w-lg border border-gray-500 rounded-xl shadow-lg p-4 p-4 mt-10">
+      <h1 class="mb-6">Create Party</h1>
 
       <.form for={@form} phx-submit="save">
         <.input field={@form[:name]} type="text" label="Party name" />
-        <.button type="submit">Save</.button>
+        <.button class="btn btn-primary btn-soft w-full mt-4" type="submit">Create</.button>
       </.form>
     </div>
     """

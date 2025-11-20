@@ -14,7 +14,7 @@ defmodule XmasGiftPoll.Events.Gift do
   def changeset(gift, attrs) do
     gift
     |> cast(attrs, [:name, :description])
-    |> validate_required([:name, :description, :person_id])
+    |> validate_required([:name, :description])
     |> foreign_key_constraint(:person_id)
   end
 end
