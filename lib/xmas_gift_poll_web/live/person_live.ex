@@ -13,6 +13,7 @@ defmodule XmasGiftPollWeb.PersonLive.New do
      socket
      |> assign(:party, party)
      |> assign(:people, people)
+     |> assign(:page_title, "Define people")
      |> assign(:form, to_form(changeset))}
   end
 
@@ -53,31 +54,33 @@ defmodule XmasGiftPollWeb.PersonLive.New do
   def render(assigns) do
     ~H"""
     <div class="mx-auto max-w-lg border border-gray-500 rounded-xl shadow-lg p-4 p-4 mt-10">
-      <h1 class="">Add people to {@party.name}</h1>
+      <h1 class="">Add people to <b>{@party.name}</b></h1>
 
       <div class="border-b border-gray-500 w-4/5 mx-auto my-6"></div>
 
       <div class="border border-gray-500 rounded-xl p-4">
         <h2>People in the party</h2>
-        <ul class="list-disc list-inside">
+        <ul>
           <%= for person <- @people do %>
             <li>
-              {person.name} - {person.receiver_id} -
-              <a
-                class="text-blue-500 hover:text-blue-700"
-                href={~p"/parties/#{@party.public_id}/people/#{person.public_id}/gifts"}
-              >
-                link for gift assigning
-              </a>
+              <div class="flex flex-row gap-2 items-center">
+                <.input value={person.name} name="name" type="text" /> -
+                <a
+                  class="text-blue-500 hover:text-blue-700"
+                  href={~p"/parties/#{@party.public_id}/people/#{person.public_id}/gifts"}
+                >
+                  link for gift assigning
+                </a>
+              </div>
             </li>
           <% end %>
         </ul>
-      </div>
 
-      <.form for={@form} phx-submit="save">
-        <.input field={@form[:name]} type="text" label="Person name" />
-        <.button class="btn btn-primary btn-soft w-full mt-4" type="submit">Add person</.button>
-      </.form>
+        <.form for={@form} phx-submit="save">
+          <.input field={@form[:name]} type="text" label="Person name" />
+          <.button class="btn btn-primary btn-soft w-full mt-4" type="submit">Add person</.button>
+        </.form>
+      </div>
 
       <.button class="btn btn-primary btn-soft w-full mt-4" type="button" phx-click="shuffle">
         Shuffle people

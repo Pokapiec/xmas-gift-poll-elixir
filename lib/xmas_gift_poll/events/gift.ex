@@ -4,7 +4,7 @@ defmodule XmasGiftPoll.Events.Gift do
 
   schema "gifts" do
     field :name, :string
-    field :description, :string
+    field :description, :string, default: ""
     belongs_to :person, XmasGiftPoll.Events.Person
 
     timestamps(type: :utc_datetime)
@@ -14,7 +14,7 @@ defmodule XmasGiftPoll.Events.Gift do
   def changeset(gift, attrs) do
     gift
     |> cast(attrs, [:name, :description])
-    |> validate_required([:name, :description])
+    |> validate_required([:name])
     |> foreign_key_constraint(:person_id)
   end
 end

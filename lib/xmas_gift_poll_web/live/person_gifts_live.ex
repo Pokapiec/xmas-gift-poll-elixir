@@ -3,38 +3,40 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
   alias XmasGiftPoll.Events
   alias XmasGiftPoll.Events.Gift
   alias XmasGiftPoll.Events.Person
+  alias XmasGiftPoll.Repo
 
   def mount(%{"public_id" => public_id, "person_public_id" => person_public_id}, _, socket) do
     party = Events.Party.get_party_by_public_id!(public_id)
     person = Person.get_by_public_id!(person_public_id) |> Events.preload_gifts()
+    receiver = Repo.get(Person, person.receiver_id) |> Events.preload_gifts()
+
+    has_defined_gifts = !Enum.empty?(person.gifts)
 
     # If the person has no gifts, we'll start them with 3 empty gift form.
     # Otherwise, we'll show their existing gifts.
     person_with_form_data =
-      if Enum.empty?(person.gifts) do
-        %{person | gifts: [%Gift{}, %Gift{}, %Gift{}]}
-      else
+      if has_defined_gifts do
         person
+      else
+        %{person | gifts: [%Gift{}, %Gift{}, %Gift{}]}
       end
 
     changeset = Events.change_person(person_with_form_data)
 
     {:ok,
      socket
+     |> assign(:has_defined_gifts, has_defined_gifts)
      |> assign(:party, party)
      |> assign(:person, person)
+     |> assign(:receiver, receiver)
+     |> assign(:page_title, "Gift definition")
      |> assign(:form, to_form(changeset))}
   end
 
   def handle_event("save", %{"person" => person_params}, socket) do
     # When saving, we update the original person struct
-    IO.inspect(person_params)
-
     case Events.update_person(socket.assigns.person, person_params) do
-      {:ok, person} ->
-        IO.inspect("It is working!")
-        IO.inspect(person)
-
+      {:ok, _person} ->
         {:noreply,
          socket
          |> put_flash(:info, "Your gifts have been saved!")
@@ -44,8 +46,6 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
          )}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        IO.inspect("Something went wrong")
-        IO.inspect(changeset)
         {:noreply, assign(socket, :form, to_form(changeset))}
     end
   end
@@ -70,26 +70,51 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
         Welcome <b>{@person.name}</b>! Show people at <b>{@party.name}</b> what you want to get!
       </h1>
 
-      <.form
-        for={@form}
-        id="gift-form"
-        phx-submit="save"
-        class="flex flex-col gap-4"
-      >
-        <% # The `inputs_for` helper renders the nested gift fields %>
-        <.inputs_for :let={gift_form} field={@form[:gifts]}>
+      <%= if !@has_defined_gifts do %>
+        <.form
+          for={@form}
+          id="gift-form"
+          phx-submit="save"
+          class="flex flex-col gap-4"
+        >
           <div class="border border-gray-500 p-4 rounded-xl">
-            <.input field={gift_form[:name]} type="text" label="Present name" />
-            <.input field={gift_form[:description]} type="text" label="Present description" />
+            <h3>Define what you want to get</h3>
+            <% # The `inputs_for` helper renders the nested gift fields %>
+            <.inputs_for :let={gift_form} field={@form[:gifts]}>
+              <.input field={gift_form[:name]} type="textarea" />
+            </.inputs_for>
+
+            <.button phx-click="one_more_gift" class="btn btn-outline" type="button">
+              <svg
+                class="size-8"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                class="bi bi-plus"
+                viewBox="0 0 16 16"
+              >
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+              </svg>
+            </.button>
           </div>
-        </.inputs_for>
 
-        <.button phx-click="one_more_gift" class="btn btn-outline" type="button">
-          One more gift
-        </.button>
-
-        <.button type="submit">Save Gifts</.button>
-      </.form>
+          <.button type="submit">Save Gifts</.button>
+        </.form>
+      <% else %>
+        <div class="border border-gray-500 p-4 rounded-xl">
+          <h2 class="mb-6 font-semibold text-md">
+            You are buying present for "{@receiver.name}" and he/she wants:
+          </h2>
+          <ul class="flex flex-col gap-4">
+            <%= if Enum.empty?(@receiver.gifts) do %>
+              <p>"{@receiver.name}" haven't defined his wishlist yet :(</p>
+            <% else %>
+              <%= for gift <- @receiver.gifts do %>
+                <li><textarea class="w-full textarea" disabled>{gift.name}</textarea></li>
+              <% end %>
+            <% end %>
+          </ul>
+        </div>
+      <% end %>
     </div>
     """
   end

@@ -4,7 +4,11 @@ defmodule XmasGiftPollWeb.PartyLive.New do
 
   def mount(_, _, socket) do
     changeset = Events.change_party(%Events.Party{})
-    {:ok, assign(socket, form: to_form(changeset))}
+
+    {:ok,
+     socket
+     |> assign(:page_title, "Create party")
+     |> assign(form: to_form(changeset))}
   end
 
   def handle_event("save", %{"party" => party_params}, socket) do
