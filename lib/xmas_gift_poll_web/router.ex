@@ -8,6 +8,7 @@ defmodule XmasGiftPollWeb.Router do
     plug :put_root_layout, html: {XmasGiftPollWeb.Layouts, :root}
     plug :protect_from_forgery
     plug :put_secure_browser_headers
+    plug XmasGiftPollWeb.Plugs.SetLocale
   end
 
   pipeline :api do

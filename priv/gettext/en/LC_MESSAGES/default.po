@@ -1,0 +1,73 @@
+## "msgid"s in this file come from POT (.pot) files.
+###
+### Do not add, change, or remove "msgid"s manually here as
+### they're tied to the ones in the corresponding POT file
+### (with the same domain).
+###
+### Use "mix gettext.extract --merge" or "mix gettext.merge"
+### to merge POT files into PO files.
+msgid ""
+msgstr ""
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: lib/xmas_gift_poll_web/live/person_gifts_live.ex:137
+#, elixir-autogen, elixir-format
+msgid "%{name} hasn't defined their wishlist yet :("
+msgstr ""
+
+#: lib/xmas_gift_poll_web/components/core_components.ex:344
+#, elixir-autogen, elixir-format
+msgid "Actions"
+msgstr ""
+
+#: lib/xmas_gift_poll_web/components/layouts.ex:99
+#: lib/xmas_gift_poll_web/components/layouts.ex:111
+#, elixir-autogen, elixir-format
+msgid "Attempting to reconnect"
+msgstr ""
+
+#: lib/xmas_gift_poll_web/live/person_gifts_live.ex:106
+#, elixir-autogen, elixir-format
+msgid "Define what you want to get"
+msgstr ""
+
+#: lib/xmas_gift_poll_web/live/person_gifts_live.ex:33
+#, elixir-autogen, elixir-format
+msgid "Gift definition"
+msgstr ""
+
+#: lib/xmas_gift_poll_web/live/person_gifts_live.ex:125
+#, elixir-autogen, elixir-format
+msgid "Save Gifts"
+msgstr ""
+
+#: lib/xmas_gift_poll_web/components/layouts.ex:106
+#, elixir-autogen, elixir-format
+msgid "Something went wrong!"
+msgstr ""
+
+#: lib/xmas_gift_poll_web/components/layouts.ex:94
+#, elixir-autogen, elixir-format
+msgid "We can't find the internet"
+msgstr ""
+
+#: lib/xmas_gift_poll_web/live/person_gifts_live.ex:92
+#, elixir-autogen, elixir-format
+msgid "Welcome %{name}! Show people at %{party} what you want to get!"
+msgstr ""
+
+#: lib/xmas_gift_poll_web/live/person_gifts_live.ex:54
+#, elixir-autogen, elixir-format
+msgid "Your gifts have been saved!"
+msgstr ""
+
+#: lib/xmas_gift_poll_web/components/core_components.ex:74
+#, elixir-autogen, elixir-format
+msgid "close"
+msgstr ""
+
+#: lib/xmas_gift_poll_web/live/person_gifts_live.ex:130
+#, elixir-autogen, elixir-format
+msgid "You are buying present for '%{name}' and he/she wants:"
+msgstr ""

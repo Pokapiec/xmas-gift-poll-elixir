@@ -8,9 +8,11 @@ defmodule XmasGiftPollWeb.PersonLive.New do
     changeset = Events.change_person(%Events.Person{})
 
     people = Events.Person.get_people_for_party(party.id)
+    all_shuffled = Enum.all?(people, fn x -> x.receiver_id != nil end)
 
     {:ok,
      socket
+     |> assign(:all_shuffled, all_shuffled)
      |> assign(:party, party)
      |> assign(:people, people)
      |> assign(:page_title, "Define people")
@@ -36,19 +38,18 @@ defmodule XmasGiftPollWeb.PersonLive.New do
     people = socket.assigns.people
     people_ids = Enum.map(people, fn person -> person.id end)
     shuffled = Events.GiftShuffle.shuffle_gift_assignments(people_ids)
-    IO.inspect(shuffled)
 
     Enum.each(shuffled, fn {giver_id, receiver_id} ->
       person = Enum.filter(people, fn person -> person.id == giver_id end) |> Enum.at(0)
 
-      res =
-        Events.change_person(person, %{receiver_id: receiver_id})
-        |> Repo.update()
-
-      IO.inspect(res)
+      Events.change_person(person, %{receiver_id: receiver_id})
+      |> Repo.update()
     end)
 
-    {:noreply, socket}
+    {:noreply,
+     socket
+     |> put_flash(:info, "Shuffled gifts!")
+     |> push_patch(to: ~p"/parties/#{socket.assigns.party.public_id}/people/new")}
   end
 
   def render(assigns) do
@@ -65,12 +66,16 @@ defmodule XmasGiftPollWeb.PersonLive.New do
             <li>
               <div class="flex flex-row gap-2 items-center">
                 <.input value={person.name} name="name" type="text" /> -
-                <a
-                  class="text-blue-500 hover:text-blue-700"
-                  href={~p"/parties/#{@party.public_id}/people/#{person.public_id}/gifts"}
-                >
-                  link for gift assigning
-                </a>
+                <%= if person.receiver_id != nil do %>
+                  <a
+                    class="text-blue-500 hover:text-blue-700"
+                    href={~p"/parties/#{@party.public_id}/people/#{person.public_id}/gifts"}
+                  >
+                    link for gift assigning
+                  </a>
+                <% else %>
+                  <p>Shuffle to get link for person</p>
+                <% end %>
               </div>
             </li>
           <% end %>
@@ -82,7 +87,12 @@ defmodule XmasGiftPollWeb.PersonLive.New do
         </.form>
       </div>
 
-      <.button class="btn btn-primary btn-soft w-full mt-4" type="button" phx-click="shuffle">
+      <.button
+        class="btn btn-primary btn-soft w-full mt-4"
+        type="button"
+        phx-click="shuffle"
+        disabled={@all_shuffled}
+      >
         Shuffle people
       </.button>
     </div>

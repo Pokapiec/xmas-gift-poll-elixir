@@ -1,5 +1,6 @@
 defmodule XmasGiftPollWeb.PersonGiftLive.New do
   use XmasGiftPollWeb, :live_view
+  use Gettext, backend: XmasGiftPollWeb.Gettext
   alias XmasGiftPoll.Events
   alias XmasGiftPoll.Events.Gift
   alias XmasGiftPoll.Events.Person
@@ -29,8 +30,19 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
      |> assign(:party, party)
      |> assign(:person, person)
      |> assign(:receiver, receiver)
-     |> assign(:page_title, "Gift definition")
+     |> assign(:page_title, gettext("Gift definition"))
      |> assign(:form, to_form(changeset))}
+  end
+
+  def handle_params(params, _uri, socket) do
+    locale =
+      case params do
+        %{"locale" => "en"} -> "en"
+        _ -> "pl"
+      end
+
+    Gettext.put_locale(XmasGiftPollWeb.Gettext, locale)
+    {:noreply, socket}
   end
 
   def handle_event("save", %{"person" => person_params}, socket) do
@@ -39,7 +51,7 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
       {:ok, _person} ->
         {:noreply,
          socket
-         |> put_flash(:info, "Your gifts have been saved!")
+         |> put_flash(:info, gettext("Your gifts have been saved!"))
          |> push_patch(
            to:
              ~p"/parties/#{socket.assigns.party.public_id}/people/#{socket.assigns.person.public_id}/gifts"
@@ -65,9 +77,22 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
 
   def render(assigns) do
     ~H"""
+    <div class="fixed top-10 right-10">
+      <div class="dropdown">
+        <div tabindex="0" role="button" class="btn m-1">Lang</div>
+        <ul tabindex="-1" class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm">
+          <li><a href="?locale=en">EN</a></li>
+          <li><a href="?locale=pl">PL</a></li>
+        </ul>
+      </div>
+    </div>
+
     <div class="mx-auto max-w-lg border border-gray-500 rounded-xl shadow-lg p-4 p-4 mt-10">
       <h1 class="mb-6">
-        Welcome <b>{@person.name}</b>! Show people at <b>{@party.name}</b> what you want to get!
+        {gettext("Welcome %{name}! Show people at %{party} what you want to get!",
+          name: @person.name,
+          party: @party.name
+        )}
       </h1>
 
       <%= if !@has_defined_gifts do %>
@@ -78,7 +103,7 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
           class="flex flex-col gap-4"
         >
           <div class="border border-gray-500 p-4 rounded-xl">
-            <h3>Define what you want to get</h3>
+            <h3>{gettext("Define what you want to get")}</h3>
             <% # The `inputs_for` helper renders the nested gift fields %>
             <.inputs_for :let={gift_form} field={@form[:gifts]}>
               <.input field={gift_form[:name]} type="textarea" />
@@ -97,16 +122,22 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
             </.button>
           </div>
 
-          <.button type="submit">Save Gifts</.button>
+          <.button type="submit">{gettext("Save Gifts")}</.button>
         </.form>
       <% else %>
         <div class="border border-gray-500 p-4 rounded-xl">
           <h2 class="mb-6 font-semibold text-md">
-            You are buying present for "{@receiver.name}" and he/she wants:
+            {gettext("You are buying present for '%{name}' and he/she wants:",
+              name: @receiver.name
+            )}
           </h2>
           <ul class="flex flex-col gap-4">
             <%= if Enum.empty?(@receiver.gifts) do %>
-              <p>"{@receiver.name}" haven't defined his wishlist yet :(</p>
+              <p>
+                {gettext("%{name} hasn't defined their wishlist yet :(",
+                  name: @receiver.name
+                )}
+              </p>
             <% else %>
               <%= for gift <- @receiver.gifts do %>
                 <li><textarea class="w-full textarea" disabled>{gift.name}</textarea></li>
