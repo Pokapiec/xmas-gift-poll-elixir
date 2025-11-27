@@ -54,47 +54,49 @@ defmodule XmasGiftPollWeb.PersonLive.New do
 
   def render(assigns) do
     ~H"""
-    <div class="mx-auto max-w-lg border border-gray-500 rounded-xl shadow-lg p-4 p-4 mt-10">
-      <h1 class="">Add people to <b>{@party.name}</b></h1>
+    <div class="w-full flex justify-center items-center">
+      <div class="mx-4 max-w-lg border border-gray-500 rounded-xl shadow-lg p-4 p-4 mt-10">
+        <h1 class="">Add people to <b>{@party.name}</b></h1>
 
-      <div class="border-b border-gray-500 w-4/5 mx-auto my-6"></div>
+        <div class="border-b border-gray-500 w-4/5 mx-auto my-6"></div>
 
-      <div class="border border-gray-500 rounded-xl p-4">
-        <h2>People in the party</h2>
-        <ul>
-          <%= for person <- @people do %>
-            <li>
-              <div class="flex flex-row gap-2 items-center">
-                <.input value={person.name} name="name" type="text" /> -
-                <%= if person.receiver_id != nil do %>
-                  <a
-                    class="text-blue-500 hover:text-blue-700"
-                    href={~p"/parties/#{@party.public_id}/people/#{person.public_id}/gifts"}
-                  >
-                    link for gift assigning
-                  </a>
-                <% else %>
-                  <p>Shuffle to get link for person</p>
-                <% end %>
-              </div>
-            </li>
-          <% end %>
-        </ul>
+        <div class="border border-gray-500 rounded-xl p-4">
+          <h2>People in the party</h2>
+          <ul>
+            <%= for person <- @people do %>
+              <li>
+                <div class="flex flex-row gap-2 items-center">
+                  <.input value={person.name} name="name" type="text" /> -
+                  <%= if person.receiver_id != nil do %>
+                    <a
+                      class="text-blue-500 hover:text-blue-700"
+                      href={~p"/parties/#{@party.public_id}/people/#{person.public_id}/gifts"}
+                    >
+                      link for gift assigning
+                    </a>
+                  <% else %>
+                    <p>Shuffle to get link for person</p>
+                  <% end %>
+                </div>
+              </li>
+            <% end %>
+          </ul>
 
-        <.form for={@form} phx-submit="save">
-          <.input field={@form[:name]} type="text" label="Person name" />
-          <.button class="btn btn-primary btn-soft w-full mt-4" type="submit">Add person</.button>
-        </.form>
+          <.form for={@form} phx-submit="save">
+            <.input field={@form[:name]} type="text" label="Person name" />
+            <.button class="btn btn-primary btn-soft w-full mt-4" type="submit">Add person</.button>
+          </.form>
+        </div>
+
+        <.button
+          class="btn btn-primary btn-soft w-full mt-4"
+          type="button"
+          phx-click="shuffle"
+          disabled={@all_shuffled}
+        >
+          Shuffle people
+        </.button>
       </div>
-
-      <.button
-        class="btn btn-primary btn-soft w-full mt-4"
-        type="button"
-        phx-click="shuffle"
-        disabled={@all_shuffled}
-      >
-        Shuffle people
-      </.button>
     </div>
     """
   end
