@@ -96,37 +96,8 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
           )}
         </h1>
 
-        <%= if !@has_defined_gifts do %>
-          <.form
-            for={@form}
-            id="gift-form"
-            phx-submit="save"
-            class="flex flex-col gap-4"
-          >
-            <div class="border border-gray-500 p-4 rounded-xl">
-              <h3>{gettext("Define what you want to get")}</h3>
-              <% # The `inputs_for` helper renders the nested gift fields %>
-              <.inputs_for :let={gift_form} field={@form[:gifts]}>
-                <.input field={gift_form[:name]} type="textarea" />
-              </.inputs_for>
-
-              <.button phx-click="one_more_gift" class="btn btn-outline" type="button">
-                <svg
-                  class="size-8"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="currentColor"
-                  class="bi bi-plus"
-                  viewBox="0 0 16 16"
-                >
-                  <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                </svg>
-              </.button>
-            </div>
-
-            <.button type="submit">{gettext("Save Gifts")}</.button>
-          </.form>
-        <% else %>
-          <div class="border border-gray-500 p-4 rounded-xl">
+        <%= if @has_defined_gifts do %>
+          <div class="border border-gray-500 p-4 rounded-xl mb-6">
             <h2 class="mb-6 font-semibold text-md">
               {gettext("You are buying present for '%{name}' and he/she wants:",
                 name: @receiver.name
@@ -147,6 +118,35 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
             </ul>
           </div>
         <% end %>
+
+        <.form
+          for={@form}
+          id="gift-form"
+          phx-submit="save"
+          class="flex flex-col gap-4"
+        >
+          <div class="border border-gray-500 p-4 rounded-xl">
+            <h3>{gettext("Define what you want to get")}</h3>
+            <% # The `inputs_for` helper renders the nested gift fields %>
+            <.inputs_for :let={gift_form} field={@form[:gifts]}>
+              <.input field={gift_form[:name]} type="textarea" />
+            </.inputs_for>
+
+            <.button phx-click="one_more_gift" class="btn btn-outline" type="button">
+              <svg
+                class="size-8"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="currentColor"
+                class="bi bi-plus"
+                viewBox="0 0 16 16"
+              >
+                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+              </svg>
+            </.button>
+          </div>
+
+          <.button type="submit">{gettext("Save Gifts")}</.button>
+        </.form>
       </div>
     </div>
     """

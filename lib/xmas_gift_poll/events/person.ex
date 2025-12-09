@@ -32,8 +32,12 @@ defmodule XmasGiftPoll.Events.Person do
   end
 
   def get_people_for_party(party_id) do
-    query = from p in __MODULE__, where: p.party_id == ^party_id
-    Repo.all(query)
+    # query = from p in __MODULE__, where: p.party_id == ^party_id
+    # Repo.all(query)
+    __MODULE__
+    |> where([p], p.party_id == ^party_id)
+    |> preload(:gifts)
+    |> Repo.all()
   end
 
   def get_by_public_id!(public_id) do
