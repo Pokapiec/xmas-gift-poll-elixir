@@ -11,18 +11,16 @@
 #   - https://pkgs.org/ - resource for finding needed packages
 #   - Ex: docker.io/hexpm/elixir:1.16.3-erlang-26.2.5.2-debian-bookworm-20251117-slim
 #
-ARG ELIXIR_VERSION=1.19.3
-ARG OTP_VERSION=28.2.5.2
 ARG DEBIAN_VERSION=bookworm-20251117-slim
 
-ARG BUILDER_IMAGE="docker.io/hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
+ARG BUILDER_IMAGE="elixir:1.19-otp-26-slim"
 ARG RUNNER_IMAGE="docker.io/debian:${DEBIAN_VERSION}"
 
 FROM ${BUILDER_IMAGE} AS builder
 
 # install build dependencies
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends build-essential git \
+    && apt-get install -y --no-install-recommends build-essential git ca-certificates openssl \
     && rm -rf /var/lib/apt/lists/*
 
 # prepare build dir
