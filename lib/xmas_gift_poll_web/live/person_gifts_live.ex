@@ -6,12 +6,14 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
   alias XmasGiftPoll.Events.Person
   alias XmasGiftPoll.Repo
 
-  def mount(%{"public_id" => public_id, "person_public_id" => person_public_id}, _, socket) do
+  def mount(%{"public_id" => public_id, "person_public_id" => person_public_id}, uri, socket) do
     party = Events.Party.get_party_by_public_id!(public_id)
     person = Person.get_by_public_id!(person_public_id) |> Events.preload_gifts()
     receiver = Repo.get(Person, person.receiver_id) |> Events.preload_gifts()
+    gift_changeset = Events.change_gift(%Events.Gift{})
+    gifts = Events.get_gifts_for_person(person.id)
 
-    has_defined_gifts = !Enum.empty?(person.gifts)
+    has_defined_gifts = Enum.count(person.gifts) >= 3
 
     # If the person has no gifts, we'll start them with 3 empty gift form.
     # Otherwise, we'll show their existing gifts.
@@ -30,7 +32,10 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
      |> assign(:party, party)
      |> assign(:person, person)
      |> assign(:receiver, receiver)
+     |> assign(:uri, uri)
+     |> assign(:gifts, gifts)
      |> assign(:page_title, gettext("Gift definition"))
+     |> assign(:gift_form, to_form(gift_changeset))
      |> assign(:form, to_form(changeset))}
   end
 
@@ -45,34 +50,42 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
     {:noreply, socket}
   end
 
-  def handle_event("save", %{"person" => person_params}, socket) do
-    # When saving, we update the original person struct
-    case Events.update_person(socket.assigns.person, person_params) do
-      {:ok, _person} ->
+  def handle_event("add_gift", %{"gift" => gift_params}, socket) do
+    modified_gift_params = gift_params |> Map.put("person_id", socket.assigns.person.id)
+
+    case Events.create_gift(modified_gift_params) do
+      {:ok, _gift} ->
         {:noreply,
          socket
-         |> put_flash(:info, gettext("Your gifts have been saved!"))
-         |> push_navigate(
-           to:
-             ~p"/parties/#{socket.assigns.party.public_id}/people/#{socket.assigns.person.public_id}/gifts"
-         )}
+         |> put_flash(:info, "Gift added!")
+         |> push_navigate(to: socket.assigns.uri.path)}
 
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :form, to_form(changeset))}
+      {:error, changeset} ->
+        {:noreply, assign(socket, :gift_form, to_form(changeset))}
     end
   end
 
-  def handle_event("one_more_gift", _params, socket) do
-    # To add a new gift form, we add a new empty Gift struct to the form's data
-    form = socket.assigns.form
-    updated_gifts = form.data.gifts ++ [%Gift{}]
-    updated_person = %{form.data | gifts: updated_gifts}
+  def handle_event("delete_gift", %{"gift-id" => gift_id}, socket) do
+    gift = Events.get_gift!(gift_id)
 
-    changeset = Events.change_person(updated_person)
+    # Verify the gift belongs to the current person (security check)
+    if gift.person_id == socket.assigns.person.id do
+      case Events.delete_gift(gift) do
+        {:ok, _gift} ->
+          updated_gifts =
+            Enum.reject(socket.assigns.gifts, fn g -> g.id == String.to_integer(gift_id) end)
 
-    {:noreply,
-     socket
-     |> assign(:form, to_form(changeset))}
+          {:noreply,
+           socket
+           |> assign(:gifts, updated_gifts)
+           |> put_flash(:info, gettext("Gift deleted!"))}
+
+        {:error, _changeset} ->
+          {:noreply, put_flash(socket, :error, gettext("Failed to delete gift"))}
+      end
+    else
+      {:noreply, put_flash(socket, :error, gettext("Unauthorized"))}
+    end
   end
 
   def render(assigns) do
@@ -88,7 +101,7 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
     </div>
 
     <div class="w-full flex justify-center items-center">
-      <div class="mx-4 max-w-lg border border-gray-500 rounded-xl shadow-lg p-4 p-4 mt-22">
+      <div class="mx-4 max-w-lg border border-gray-500 rounded-xl shadow-lg p-4 p-4 mt-22 mb-6">
         <h1 class="mb-6">
           {gettext("Welcome %{name}! Show people at %{party} what you want to get!",
             name: @person.name,
@@ -119,34 +132,41 @@ defmodule XmasGiftPollWeb.PersonGiftLive.New do
           </div>
         <% end %>
 
-        <.form
-          for={@form}
-          id="gift-form"
-          phx-submit="save"
-          class="flex flex-col gap-4"
-        >
+        <div class="flex flex-col gap-4">
           <div class="border border-gray-500 p-4 rounded-xl">
             <h3>{gettext("Define what you want to get")}</h3>
-            <% # The `inputs_for` helper renders the nested gift fields %>
-            <.inputs_for :let={gift_form} field={@form[:gifts]}>
-              <.input field={gift_form[:name]} type="textarea" />
-            </.inputs_for>
+            <small>{gettext("Define at least 3 presents")}</small>
 
-            <.button phx-click="one_more_gift" class="btn btn-outline" type="button">
-              <svg
-                class="size-8"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="currentColor"
-                class="bi bi-plus"
-                viewBox="0 0 16 16"
-              >
-                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-              </svg>
-            </.button>
+            <ul class="flex flex-col gap-4 mt-5">
+              <%= for gift <- @gifts do %>
+                <li class="relative">
+                  <textarea class="w-full textarea" disabled>{gift.name}</textarea>
+                  <button
+                    type="button"
+                    phx-click="delete_gift"
+                    phx-value-gift-id={gift.id}
+                    data-confirm={gettext("Are you sure you want to delete this gift?")}
+                    class="btn btn-error btn-sm absolute top-2 right-2"
+                  >
+                    {gettext("Delete")}
+                  </button>
+                </li>
+              <% end %>
+            </ul>
+
+            <.form for={@gift_form} phx-submit="add_gift" class="mt-4">
+              <.input
+                field={@gift_form[:name]}
+                type="textarea"
+                label="Gift name"
+                placeholder={gettext("Write down another present you would like to get")}
+              />
+              <.button class="btn btn-primary btn-soft w-full mt-4" type="submit">
+                {gettext("Add Gift")}
+              </.button>
+            </.form>
           </div>
-
-          <.button type="submit">{gettext("Save Gifts")}</.button>
-        </.form>
+        </div>
       </div>
     </div>
     """

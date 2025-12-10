@@ -11,7 +11,7 @@ defmodule XmasGiftPollWeb.PersonLive.New do
     people =
       Events.Person.get_people_for_party(party.id)
       |> Enum.map(fn p ->
-        Map.put(p, :has_defined_gifts, !Enum.empty?(p.gifts))
+        Map.put(p, :gift_count, Enum.count(p.gifts))
       end)
 
     all_shuffled = Enum.all?(people, fn x -> x.receiver_id != nil end)
@@ -43,7 +43,7 @@ defmodule XmasGiftPollWeb.PersonLive.New do
 
   def handle_event("save_party", %{"party" => party_params}, socket) do
     case Events.update_party(socket.assigns.party, party_params) do
-      {:ok, party} ->
+      {:ok, _party} ->
         {:noreply,
          socket
          |> put_flash(:info, "Party name changed!")
@@ -74,8 +74,8 @@ defmodule XmasGiftPollWeb.PersonLive.New do
 
   def render(assigns) do
     ~H"""
-    <div class="w-full flex justify-center items-center">
-      <div class="mx-4 max-w-lg border border-gray-500 rounded-xl shadow-lg p-4 p-4 mt-10">
+    <div class="w-full min-w-0 flex justify-center items-center">
+      <div class="mx-4 max-w-lg border border-gray-500 rounded-xl shadow-lg p-4 p-4 mt-10 mb-6">
         <h1 class="">Add people to <b>{@party.name}</b></h1>
 
         <div class="border-b border-gray-500 w-4/5 mx-auto my-6"></div>
@@ -94,12 +94,12 @@ defmodule XmasGiftPollWeb.PersonLive.New do
         <div class="border border-gray-500 rounded-xl p-4">
           <h2>People in the party</h2>
           <div class="overflow-x-auto rounded-box border border-base-content/5 bg-base-100 my-4">
-            <table class="table">
+            <table class="table table-sm md:table-md">
               <thead>
                 <tr>
                   <th>Name</th>
                   <th>Link for Person</th>
-                  <th>Has Defined Gifts</th>
+                  <th>Gift count</th>
                 </tr>
               </thead>
               <%= for person <- @people do %>
@@ -118,11 +118,7 @@ defmodule XmasGiftPollWeb.PersonLive.New do
                     <% end %>
                   </td>
                   <td>
-                    <%= if person.has_defined_gifts do %>
-                      yes
-                    <% else %>
-                      no
-                    <% end %>
+                    {person.gift_count}
                   </td>
                 </tr>
               <% end %>

@@ -130,7 +130,6 @@ defmodule XmasGiftPoll.Events do
     Repo.all(from p in Person, where: p.party_id == ^party_id)
   end
 
-
   @doc """
   Gets a single person.
 
@@ -310,5 +309,10 @@ defmodule XmasGiftPoll.Events do
   """
   def change_gift(%Gift{} = gift, attrs \\ %{}) do
     Gift.changeset(gift, attrs)
+  end
+
+  def get_gifts_for_person(person_id) do
+    query = from g in Gift, where: g.person_id == ^person_id
+    Repo.all(query)
   end
 end
